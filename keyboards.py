@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 
 def get_main_menu() -> InlineKeyboardMarkup:
@@ -101,6 +101,12 @@ def get_school_menu() -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(
+                    text="🌐 Открыть веб-расписание",
+                    callback_data="web_schedule"
+                )
+            ],
+            [
+                InlineKeyboardButton(
                     text="🔙 Назад в меню",
                     callback_data="menu"
                 )
@@ -155,6 +161,93 @@ def get_back_button() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(
                     text="🔙 Назад в меню",
                     callback_data="menu"
+                )
+            ]
+        ]
+    )
+    return keyboard
+
+
+def get_web_schedule_options() -> InlineKeyboardMarkup:
+    """
+    Создает меню вариантов доступа к веб-расписанию
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🌐 Открыть в браузере",
+                    url="https://artiga2000.github.io/Sedule3B/"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📱 Web App (в Telegram)",
+                    web_app=WebAppInfo(url="https://artiga2000.github.io/Sedule3B/")
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📋 Показать расписание здесь",
+                    callback_data="show_schedule_text"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔙 Назад к школьным делам",
+                    callback_data="school"
+                )
+            ]
+        ]
+    )
+    return keyboard
+
+
+def get_mini_app_keyboard() -> InlineKeyboardMarkup:
+    """
+    Создает клавиатуру с Mini App кнопкой
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🚀 Запустить расписание",
+                    web_app=WebAppInfo(url="https://artiga2000.github.io/Sedule3B/")
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔙 Назад",
+                    callback_data="school"
+                )
+            ]
+        ]
+    )
+    return keyboard
+
+
+def get_external_link_keyboard() -> InlineKeyboardMarkup:
+    """
+    Создает клавиатуру с внешней ссылкой
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🌐 Открыть расписание",
+                    url="https://artiga2000.github.io/Sedule3B/"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📋 Информация о расписании",
+                    callback_data="schedule_info"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔙 Назад",
+                    callback_data="school"
                 )
             ]
         ]
