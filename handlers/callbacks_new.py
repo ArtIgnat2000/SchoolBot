@@ -1,10 +1,39 @@
 from aiogram import Router
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from keyboards import get_main_menu, get_back_button
 from utils import get_user_name
 
 # Создаем роутер для callback'ов
 callbacks_router = Router()
+
+
+async def safe_edit_message(callback: CallbackQuery, text: str, reply_markup=None):
+    """
+    Безопасное редактирование сообщения с проверкой типов
+    """
+    try:
+        # Проверяем, что message существует и это действительно Message (не InaccessibleMessage)
+        if callback.message and isinstance(callback.message, Message):
+            await callback.message.edit_text(text=text, reply_markup=reply_markup)
+        elif callback.bot and callback.from_user:
+            # Если не можем отредактировать, отправляем новое сообщение
+            await callback.bot.send_message(
+                chat_id=callback.from_user.id,
+                text=text,
+                reply_markup=reply_markup
+            )
+    except Exception as e:
+        # В случае любой ошибки пытаемся отправить новое сообщение через бота
+        try:
+            if callback.bot and callback.from_user:
+                await callback.bot.send_message(
+                    chat_id=callback.from_user.id,
+                    text=text,
+                    reply_markup=reply_markup
+                )
+        except Exception as inner_e:
+            # Если и это не работает, просто логируем ошибку
+            print(f"Критическая ошибка отправки сообщения: {inner_e}, первоначальная ошибка: {e}")
 
 
 @callbacks_router.callback_query()
@@ -23,7 +52,7 @@ async def handle_callbacks(callback: CallbackQuery):
                 f"Привет, {user_name}! 👋\n"
                 f"Выберите нужный раздел:"
             )
-            await callback.message.edit_text(text=menu_text, reply_markup=get_main_menu())
+            await safe_edit_message(callback, menu_text, get_main_menu())
             
         elif callback.data == "info":
             info_text = (
@@ -39,7 +68,7 @@ async def handle_callbacks(callback: CallbackQuery):
                 "• Улучшенная навигация\n"
                 "• Расширенная справочная система"
             )
-            await callback.message.edit_text(text=info_text, reply_markup=get_back_button())
+            await safe_edit_message(callback, info_text, get_back_button())
             
         elif callback.data == "help":
             help_text = (
@@ -54,7 +83,7 @@ async def handle_callbacks(callback: CallbackQuery):
                 "📱 <b>Навигация:</b>\n"
                 "Используйте кнопки для удобства"
             )
-            await callback.message.edit_text(text=help_text, reply_markup=get_back_button())
+            await safe_edit_message(callback, help_text, get_back_button())
             
         elif callback.data in ["school", "settings"]:
             feature_text = (
@@ -67,7 +96,7 @@ async def handle_callbacks(callback: CallbackQuery):
                 "• Настройки уведомлений\n\n"
                 "💡 Следите за обновлениями!"
             )
-            await callback.message.edit_text(text=feature_text, reply_markup=get_back_button())
+            await safe_edit_message(callback, feature_text, get_back_button())
             
         else:
             # Для всех неизвестных callback'ов возвращаем в меню
@@ -78,7 +107,7 @@ async def handle_callbacks(callback: CallbackQuery):
                 f"Привет, {user_name}! 👋\n"
                 f"Выберите нужный раздел:"
             )
-            await callback.message.edit_text(text=menu_text, reply_markup=get_main_menu())
+            await safe_edit_message(callback, menu_text, get_main_menu())
             
     except Exception as e:
         # В случае ошибки просто отвечаем на callback
