@@ -9,7 +9,7 @@ from aiogram.types import Message
 
 # Импорт конфигурации и обработчиков
 from config import config
-from handlers import register_commands, register_messages
+from handlers import register_commands, register_messages, register_callbacks
 
 # Настройка логирования
 logging.basicConfig(
@@ -33,6 +33,7 @@ async def main() -> None:
     # Регистрируем обработчики
     register_commands(dp)
     register_messages(dp)
+    register_callbacks(dp)
     
     logger.info("Бот запускается...")
     

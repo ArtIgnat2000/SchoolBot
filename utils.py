@@ -1,28 +1,36 @@
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
+from typing import Union
 
 
-def get_user_name(message: Message) -> str:
+def get_user_name(message_or_callback: Union[Message, CallbackQuery]) -> str:
     """
     Безопасное получение имени пользователя
     
     Args:
-        message: Объект сообщения от aiogram
+        message_or_callback: Объект сообщения или callback от aiogram
         
     Returns:
         str: Имя пользователя или запасной вариант
     """
-    if message.from_user is None:
+    # Получаем пользователя из Message или CallbackQuery
+    user = None
+    if isinstance(message_or_callback, Message):
+        user = message_or_callback.from_user
+    elif isinstance(message_or_callback, CallbackQuery):
+        user = message_or_callback.from_user
+    
+    if user is None:
         return "Пользователь"
     
     # Используем full_name если доступно, иначе first_name, username или ID
-    if message.from_user.full_name:
-        return message.from_user.full_name
-    elif message.from_user.first_name:
-        return message.from_user.first_name
-    elif message.from_user.username:
-        return f"@{message.from_user.username}"
+    if user.full_name:
+        return user.full_name
+    elif user.first_name:
+        return user.first_name
+    elif user.username:
+        return f"@{user.username}"
     else:
-        return f"ID{message.from_user.id}"
+        return f"ID{user.id}"
 
 
 def is_admin(message: Message, admin_ids: list) -> bool:
