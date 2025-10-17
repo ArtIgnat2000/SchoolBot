@@ -1,13 +1,50 @@
 from aiogram import Router
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
+from aiogram.exceptions import TelegramBadRequest
 from keyboards import (
     get_main_menu, get_help_menu, get_school_menu, 
     get_settings_menu, get_back_button
 )
 from utils import get_user_name
+import logging
 
 # Создаем роутер для callback'ов
 callbacks_router = Router()
+
+# Настройка логгера
+logger = logging.getLogger(__name__)
+
+
+async def safe_edit_message(callback: CallbackQuery, text: str, reply_markup=None):
+    """
+    Безопасное редактирование сообщения с проверкой типов
+    """
+    try:
+        # Проверяем, что message существует и это действительно Message (не InaccessibleMessage)
+        if callback.message and isinstance(callback.message, Message):
+            await callback.message.edit_text(text=text, reply_markup=reply_markup)
+        elif callback.message and hasattr(callback.message, 'answer'):
+            # Если не можем отредактировать, отправляем новое сообщение
+            await callback.message.answer(text=text, reply_markup=reply_markup)
+        elif callback.bot and callback.from_user:
+            # Последняя попытка через бота
+            await callback.bot.send_message(
+                chat_id=callback.from_user.id,
+                text=text,
+                reply_markup=reply_markup
+            )
+    except (TelegramBadRequest, AttributeError) as e:
+        logger.warning(f"Не удалось отредактировать сообщение: {e}")
+        # В случае ошибки пытаемся отправить новое сообщение
+        try:
+            if callback.bot and callback.from_user:
+                await callback.bot.send_message(
+                    chat_id=callback.from_user.id,
+                    text=text,
+                    reply_markup=reply_markup
+                )
+        except Exception as inner_e:
+            logger.error(f"Критическая ошибка отправки сообщения: {inner_e}")
 
 
 @callbacks_router.callback_query(lambda c: c.data == "menu")
@@ -15,12 +52,10 @@ async def show_main_menu(callback: CallbackQuery):
     """
     Показывает главное меню
     """
-    user_name = "Пользователь"
-    if callback.message and hasattr(callback.message, 'from_user'):
-        try:
-            user_name = get_user_name(callback.message)
-        except:
-            user_name = "Пользователь"
+    try:
+        user_name = get_user_name(callback)
+    except:
+        user_name = "Пользователь"
     
     menu_text = (
         f"🎓 <b>Главное меню School Bot</b>\n\n"
@@ -42,10 +77,7 @@ async def show_help_menu(callback: CallbackQuery):
         "Выберите раздел справки:"
     )
     
-    await callback.message.edit_text(
-        text=help_text,
-        reply_markup=get_help_menu()
-    )
+    await safe_edit_message(callback, help_text, get_help_menu())
     await callback.answer()
 
 
