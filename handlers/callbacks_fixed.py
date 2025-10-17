@@ -26,7 +26,7 @@ async def safe_edit_or_send(callback: CallbackQuery, text: str, reply_markup=Non
     """
     try:
         # Пытаемся отредактировать существующее сообщение
-        if callback.message and hasattr(callback.message, 'edit_text'):
+        if callback.message and isinstance(callback.message, Message) and hasattr(callback.message, 'edit_text'):
             await callback.message.edit_text(text=text, reply_markup=reply_markup)
             return True
     except (TelegramBadRequest, AttributeError) as e:
@@ -117,7 +117,8 @@ async def show_feature_in_development(callback: CallbackQuery):
         "settings": "⚙️ Настройки"
     }
     
-    feature_name = feature_names.get(callback.data, "Функция")
+    # Безопасное получение названия функции с дополнительной проверкой
+    feature_name = feature_names.get(callback.data if callback.data else "", "Неизвестная функция")
     
     feature_text = (
         f"🚧 <b>{feature_name}</b>\n\n"
@@ -138,6 +139,8 @@ async def show_feature_in_development(callback: CallbackQuery):
 @callbacks_router.callback_query()
 async def handle_unknown_callback(callback: CallbackQuery):
     """Обработка неизвестных callback'ов"""
+    callback_data = getattr(callback, 'data', 'unknown')
+    logger.info(f"Получен неизвестный callback: {callback_data}")
     await safe_answer_callback(callback, "🔄 Функция в разработке", show_alert=True)
     
     # Возвращаем в главное меню
