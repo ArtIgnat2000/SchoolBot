@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Telegram Mini App - Заказ</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <h1>Магазин</h1>
+    <button id="orderBtn">Отправить заказ</button>
+
+    <script>
+        Telegram.WebApp.ready();
+
+        const order = {
+            items: [
+                {id: 1, name: "Товар A", quantity: 2},
+                {id: 2, name: "Услуга B", quantity: 1}
+            ],
+            total: 2500,
+            customer: "Иван Иванов"
+        };
+
+        document.getElementById("orderBtn").onclick = () => {
+            // Отправляем JSON-строку с заказом боту
+            Telegram.WebApp.sendData(JSON.stringify(order));
+            alert("Заказ отправлен!");
+        };
+    </script>
+</body>
+</html>

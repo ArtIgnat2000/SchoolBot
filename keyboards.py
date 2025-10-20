@@ -177,13 +177,13 @@ def get_web_schedule_options() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     text="🌐 Открыть в браузере",
-                    url="https://artiga2000.github.io/Sedule3B/"
+                    url="https://artignat2000.github.io/Sedule3B/index.htm"
                 )
             ],
             [
                 InlineKeyboardButton(
                     text="📱 Web App (в Telegram)",
-                    web_app=WebAppInfo(url="https://artiga2000.github.io/Sedule3B/")
+                    web_app=WebAppInfo(url="https://artignat2000.github.io/Sedule3B/index.htm")
                 )
             ],
             [
@@ -211,8 +211,8 @@ def get_mini_app_keyboard() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="🚀 Запустить расписание",
-                    web_app=WebAppInfo(url="https://artiga2000.github.io/Sedule3B/")
+                    text="🚀 Запустить расписание Mini App",
+                    web_app=WebAppInfo(url="https://artignat2000.github.io/Sedule3B/index.htm")
                 )
             ],
             [
@@ -235,7 +235,7 @@ def get_external_link_keyboard() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     text="🌐 Открыть расписание",
-                    url="https://artiga2000.github.io/Sedule3B/"
+                    url="https://artignat2000.github.io/Sedule3B/index.htm"
                 )
             ],
             [
