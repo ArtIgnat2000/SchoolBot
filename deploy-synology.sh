@@ -85,6 +85,18 @@ check_docker_permissions() {
             log_warning "Необходимо перелогиниться для применения изменений"
             log_info "Выполните: exit, затем подключитесь заново и запустите скрипт"
             exit 0
+        elif command -v synogroup &> /dev/null; then
+            # Попытка через synogroup (специфично для Synology)
+            if sudo synogroup --add docker $USER 2>/dev/null; then
+                log_success "Пользователь добавлен в группу docker через synogroup"
+                log_warning "Необходимо перелогиниться для применения изменений"
+                exit 0
+            fi
+        elif sudo adduser $USER docker 2>/dev/null; then
+            # Альтернативная команда для некоторых систем
+            log_success "Пользователь добавлен в группу docker через adduser"
+            log_warning "Необходимо перелогиниться для применения изменений"
+            exit 0
         fi
         
         # Пробуем изменить права на socket
