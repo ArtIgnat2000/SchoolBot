@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  school-bot:
+    build: .
+    container_name: school-bot
+    restart: unless-stopped
+    
+    # Переменные окружения
+    environment:
+      - PYTHONUNBUFFERED=1
+    
+    # Загрузка .env файла
+    env_file:
+      - .env
+    
+    # Мониторинг логов
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Ресурсы контейнера
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+    
+    # Healthcheck
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Опциональный Redis для кэширования (раскомментировать при необходимости)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: school-bot-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 64M
+  #         cpus: '0.1'
+
+# volumes:
+#   redis_data:
