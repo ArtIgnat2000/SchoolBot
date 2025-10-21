@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  school-bot:
+    build: .
+    container_name: school-bot-external-code
+    restart: unless-stopped
+    
+    # 📁 ВНЕШНИЙ КОД - монтируем код с хоста
+    volumes:
+      # Основной код проекта
+      - ./main.py:/app/main.py
+      - ./config.py:/app/config.py
+      - ./utils.py:/app/utils.py
+      - ./keyboards.py:/app/keyboards.py
+      - ./handlers:/app/handlers
+      # Конфигурация
+      - ./.env:/app/.env
+    
+    # Переменные окружения
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+    
+    # Загрузка .env файла
+    env_file:
+      - .env
+    
+    # Команда запуска (остается стандартной)
+    command: python main.py
+    
+    # Мониторинг логов
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Ресурсы контейнера
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+    
+    # Healthcheck
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

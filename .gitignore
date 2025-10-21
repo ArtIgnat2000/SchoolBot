@@ -134,3 +134,13 @@ cython_debug/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Docker разработка (раскомментировать если не нужны в Git)
+# docker-compose.dev.yml
+# docker-compose.external-code.yml
+# Dockerfile.dev
+# EXTERNAL_CODE_GUIDE.md
+# dev-mode.ps1
+
+# Архивы Synology
+school-bot-synology-*.zip

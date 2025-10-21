@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  school-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: school-bot-dev
+    restart: unless-stopped
+    
+    # 🔄 МОНТИРОВАНИЕ КОДА ДЛЯ РАЗРАБОТКИ
+    volumes:
+      # Монтируем весь код проекта
+      - .:/app
+      # Исключаем виртуальное окружение (остается в контейнере)
+      - /app/venv
+      # Исключаем __pycache__ (для чистоты)
+      - /app/__pycache__
+      - /app/handlers/__pycache__
+    
+    # Переменные окружения
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1  # Отключаем .pyc файлы
+      - PYTHONPATH=/app            # Путь к коду
+    
+    # Загрузка .env файла
+    env_file:
+      - .env
+    
+    # 🔄 АВТОПЕРЕЗАПУСК ПРИ ИЗМЕНЕНИЯХ
+    # Для автоматического перезапуска при изменениях кода
+    command: >
+      sh -c "
+        pip install watchdog[watchmedo] &&
+        watchmedo auto-restart --directory=/app --pattern='*.py' --recursive -- python main.py
+      "
+    
+    # Мониторинг логов
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Ресурсы контейнера
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+    
+    # Healthcheck
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Опциональный Redis для кэширования
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: school-bot-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 64M
+  #         cpus: '0.1'
+
+# volumes:
+#   redis_data:

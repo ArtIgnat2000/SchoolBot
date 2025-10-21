@@ -22,8 +22,12 @@ $FilesToInclude = @(
     # Docker файлы
     "Dockerfile",
     "Dockerfile.optimized",
+    "Dockerfile.dev",
     "docker-compose.yml",
     "docker-compose.synology.yml",
+    "docker-compose.synology-compatible.yml",
+    "docker-compose.dev.yml",
+    "docker-compose.external-code.yml",
     ".dockerignore",
     
     # Скрипты для Synology
@@ -36,6 +40,8 @@ $FilesToInclude = @(
     # Документация
     "README.md",
     "SYNOLOGY_DEPLOYMENT.md", 
+    "SYNOLOGY_EXTERNAL_CODE.md",
+    "EXTERNAL_CODE_GUIDE.md",
     "QUICK_START_SYNOLOGY.md",
     "DOCKER_GUIDE.md",
     "WEB_INTEGRATION.md",
