@@ -178,8 +178,9 @@ choose_compose_file() {
     echo "Выберите конфигурацию для развертывания:"
     echo "1) Базовая конфигурация (docker-compose.yml)"
     echo "2) Оптимизированная для Synology (docker-compose.synology.yml)"
+    echo "3) Совместимая с старыми Synology (docker-compose.synology-compatible.yml)"
     echo ""
-    read -p "Введите номер (1-2) [2]: " choice
+    read -p "Введите номер (1-3) [2]: " choice
     choice=${choice:-2}
     
     case $choice in
@@ -190,6 +191,10 @@ choose_compose_file() {
         2)
             COMPOSE_FILE="docker-compose.synology.yml"
             log_info "Выбрана конфигурация для Synology"
+            ;;
+        3)
+            COMPOSE_FILE="docker-compose.synology-compatible.yml"
+            log_info "Выбрана совместимая конфигурация (без CPU ограничений)"
             ;;
         *)
             log_error "Неверный выбор!"
@@ -223,7 +228,29 @@ build_image() {
 # Запуск контейнеров
 start_containers() {
     log_info "Запуск контейнеров..."
-    $COMPOSE_CMD -f $COMPOSE_FILE up -d
+    
+    # Попробуем запустить с выбранной конфигурацией
+    if ! $COMPOSE_CMD -f $COMPOSE_FILE up -d 2>/dev/null; then
+        log_warning "Ошибка запуска с $COMPOSE_FILE"
+        
+        # Проверяем на ошибку CFS scheduler
+        if $COMPOSE_CMD -f $COMPOSE_FILE up -d 2>&1 | grep -q "CPU CFS scheduler"; then
+            log_warning "Обнаружена проблема с CPU CFS scheduler"
+            log_info "Переключаемся на совместимую конфигурацию..."
+            
+            COMPOSE_FILE="docker-compose.synology-compatible.yml"
+            if ! $COMPOSE_CMD -f $COMPOSE_FILE up -d; then
+                log_error "Не удалось запустить даже с совместимой конфигурацией"
+                exit 1
+            fi
+        else
+            # Показываем ошибку и выходим
+            log_error "Ошибка запуска контейнеров:"
+            $COMPOSE_CMD -f $COMPOSE_FILE up -d
+            exit 1
+        fi
+    fi
+    
     log_success "Контейнеры запущены"
 }
 
