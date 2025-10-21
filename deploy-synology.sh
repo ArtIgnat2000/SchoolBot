@@ -41,6 +41,65 @@ check_docker() {
     log_success "Docker найден"
 }
 
+# Проверка прав доступа к Docker
+check_docker_permissions() {
+    log_info "Проверка прав доступа к Docker..."
+    
+    if docker info &> /dev/null; then
+        log_success "Права доступа к Docker в порядке"
+        return 0
+    fi
+    
+    log_warning "Нет прав доступа к Docker daemon"
+    
+    # Проверяем, запущен ли скрипт через sudo
+    if [ "$EUID" -eq 0 ]; then
+        log_success "Скрипт запущен через sudo - продолжаем"
+        return 0
+    fi
+    
+    # Предлагаем решения
+    echo ""
+    log_error "Ошибка доступа к Docker daemon!"
+    echo ""
+    echo "🔧 Возможные решения:"
+    echo ""
+    echo "1️⃣  Запустить скрипт через sudo:"
+    echo "   sudo bash deploy-synology.sh"
+    echo ""
+    echo "2️⃣  Добавить пользователя в группу docker:"
+    echo "   sudo usermod -aG docker $USER"
+    echo "   exit  # Перелогиниться"
+    echo ""
+    echo "3️⃣  Временно изменить права (до перезагрузки):"
+    echo "   sudo chmod 666 /var/run/docker.sock"
+    echo ""
+    
+    read -p "Попробовать автоматически исправить права? (y/N): " fix_permissions
+    if [[ $fix_permissions =~ ^[Yy]$ ]]; then
+        log_info "Попытка исправления прав..."
+        
+        # Пробуем добавить в группу docker
+        if sudo usermod -aG docker $USER 2>/dev/null; then
+            log_success "Пользователь добавлен в группу docker"
+            log_warning "Необходимо перелогиниться для применения изменений"
+            log_info "Выполните: exit, затем подключитесь заново и запустите скрипт"
+            exit 0
+        fi
+        
+        # Пробуем изменить права на socket
+        if sudo chmod 666 /var/run/docker.sock 2>/dev/null; then
+            log_success "Права на Docker socket временно изменены"
+            log_warning "Изменения действуют до перезагрузки системы"
+            return 0
+        fi
+        
+        log_error "Не удалось автоматически исправить права"
+    fi
+    
+    exit 1
+}
+
 # Проверка наличия docker-compose
 check_docker_compose() {
     if ! command -v docker-compose &> /dev/null; then
@@ -207,6 +266,7 @@ case "${1:-}" in
         ;;
     -s|--stop)
         check_docker
+        check_docker_permissions
         check_docker_compose
         choose_compose_file
         log_info "Остановка School Bot..."
@@ -216,6 +276,7 @@ case "${1:-}" in
         ;;
     -r|--restart)
         check_docker
+        check_docker_permissions
         check_docker_compose
         choose_compose_file
         log_info "Перезапуск School Bot..."
@@ -231,6 +292,7 @@ case "${1:-}" in
         ;;
     -u|--update)
         check_docker
+        check_docker_permissions
         check_docker_compose
         choose_compose_file
         log_info "Обновление School Bot..."
@@ -251,6 +313,7 @@ main() {
     
     # Проверки
     check_docker
+    check_docker_permissions
     check_docker_compose
     create_directories
     check_env_file
